@@ -1,0 +1,75 @@
+version: "3.8"
+
+secrets:
+  netrc_file:
+    file: "${HOME}/.netrc"
+
+services:
+  app:
+    container_name: service_app
+    build:
+      dockerfile: ./docker/images/app/Dockerfile
+      context: .
+    networks:
+      - rezerve
+    volumes:
+      - .:/app
+      - type: bind
+        source: ./docker/images/app/config/aws
+        target: /root/.aws
+      - type: bind
+        source: ./docker/images/app/config/supervisor
+        target: /etc/supervisor
+    env_file: .env
+    secrets:
+      - source: netrc_file
+        target: "/root/.netrc"
+    ports:
+      - "9010:9000"
+    command: [ "sh", "-c", "supervisord -c /etc/supervisor/supervisord.conf" ]
+
+  localstack:
+    image: localstack/localstack
+    container_name: service_localstack
+    environment:
+      - SERVICES=dynamodb
+      - DEFAULT_REGION=eu-central-1
+      - DEBUG=1
+    volumes:
+      - "./docker/images/localstack/data:/var/lib/localstack"
+      - "./scripts/docker/localstack:/etc/localstack/init/ready.d"
+    networks:
+      - rezerve
+
+  localstack-test:
+    image: localstack/localstack
+    container_name: service_localstack-test
+    environment:
+      - SERVICES=dynamodb
+      - DEFAULT_REGION=eu-central-1
+      - DEBUG=1
+    expose:
+      - '4566'
+    volumes:
+      - "./docker/images/localstack-test/data:/var/lib/localstack"
+    networks:
+      - rezerve
+
+  terraform:
+    image: hashicorp/terraform:latest
+    networks:
+      - rezerve
+    environment:
+      - TF_CLI_ARGS_plan="-compact-warnings"
+      - TF_CLI_ARGS_apply="-compact-warnings"
+    volumes:
+      - ./docker/images/terraform:/infra
+    working_dir: /infra
+
+networks:
+  rezerve:
+    driver: bridge
+
+volumes:
+  tmp:
+    driver: local

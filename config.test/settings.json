@@ -1,0 +1,21 @@
+{
+  "environment": "test",
+  "maintenance": "/maintenance",
+  "logger": {
+    "level": "debug"
+  },
+  "server": {
+    "api": {
+      "port": "9010",
+      "unix_socket": ""
+    }
+  },
+  "db": {
+    "dynamodb": {
+      "endpoint": "http://service_localstack-test:4566",
+      "table_names": {
+        "projects": "projects"
+      }
+    }
+  }
+}

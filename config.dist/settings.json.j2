@@ -1,0 +1,21 @@
+{
+    "environment": "{{ ENVIRONMENT }}",
+    "maintenance": "/maintenance",
+    "logger": {
+        "level": "{{ LOGGER_LEVEL }}"
+    },
+    "server": {
+        "api": {
+            "port": "{{ SERVER_API_PORT }}",
+            "unix_socket": "{{ SERVER_API_UNIX_SOCKET }}"
+        }
+    },
+    "db": {
+        "dynamodb": {
+            "endpoint": "{{ DYNAMODB_ENDPOINT }}",
+            "table_names": {
+                "projects": "{{ DYNAMODB_TABLE_NAME_PROJECTS }}"
+            }
+        }
+    }
+}

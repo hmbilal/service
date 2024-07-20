@@ -1,0 +1,72 @@
+cli_image: &cli_image
+  container_image: 234501887366.dkr.ecr.eu-central-1.amazonaws.com/np-al/np-activities:web-IMAGE_TAG
+
+ecs_environment: &ecs_environment
+  GOPRIVATE: bucket.digitalarsenal.net
+  ACTIVITIES_LOGGER_LEVEL: error
+  ACTIVITIES_SERVER_API_PORT: 8080
+  ACTIVITIES_DYNAMODB_TABLE_NAME_PROJECTS: np--activities-projects
+
+ecs_secrets: &ecs_secrets
+  ACTIVITIES_SENTRY_DSN: activities/ACTIVITIES_SENTRY_DSN
+  ACTIVITIES_ELASTICSEARCH_USERNAME: activities/ACTIVITIES_ELASTICSEARCH_USERNAME
+  ACTIVITIES_ELASTICSEARCH_PASSWORD: activities/ACTIVITIES_ELASTICSEARCH_PASSWORD
+
+default_ecs_task: &default_ecs_task
+  port_mappings:
+    - containerPort: 8080
+      hostPort: 8080
+      protocol: tcp
+  runtime_platform:
+    - cpu_architecture: X86_64
+      operating_system_family: LINUX
+  environment_map:
+    *ecs_environment
+  secrets_map:
+    *ecs_secrets
+
+ecs_service:
+  activities:
+    cluster: np-${env}-activities-ecs-cluster
+    internal: false
+    internal_connectivity: true
+    desired_count: 1
+    task_memory: '1024'
+    task_cpu: '512'
+    task_role: "ecs-task-exec-role-dynamo"
+    healthcheck:
+      timeout: 10
+      path: '/v1/ping'
+      port: 8080
+      unhealthy_threshold: 2
+      healthy_threshold: 3
+    ecs_task:
+      <<: *default_ecs_task
+      <<: *cli_image
+      container_command:
+        - sh
+        - init.sh
+
+dynamodb:
+  - name: "activities-projects"
+    attributes: [ {
+      name: "AccessKey",
+      type: "S"
+    } ]
+    hash_key: "AccessKey"
+    billing_mode: "PROVISIONED"
+    write_capacity: 5
+    read_capacity: 5
+    autoscaling_enabled: true
+    autoscaling_read: {
+      scale_in_cooldown: 50,
+      scale_out_cooldown: 40,
+      target_value: 70,
+      max_capacity: 5
+    }
+    autoscaling_write: {
+      scale_in_cooldown: 50,
+      scale_out_cooldown: 40,
+      target_value: 70,
+      max_capacity: 5
+    }

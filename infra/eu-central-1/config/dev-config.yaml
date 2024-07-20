@@ -1,0 +1,8 @@
+override_environment: &override_environment
+  ACTIVITIES_ELASTICSEARCH_ENDPOINT: "https://vpc-np-prod-activity-opensearch-m2jpjumsnhcpolqh3uwqsfcc34.eu-central-1.es.amazonaws.com:443"
+
+ecs_service:
+  activities:
+    ecs_task:
+      environment_map:
+        *override_environment

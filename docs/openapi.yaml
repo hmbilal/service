@@ -1,0 +1,151 @@
+openapi: 3.0.0
+info:
+  title: Service
+  version: 1.0.0
+tags:
+  - name: service
+    description: this microservice manages all pre-populated services
+paths:
+  /v1/services:
+    post:
+      tags:
+        - service
+      summary: sample endpoint description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SamplePostRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 1606|1607
+                      message:
+                        type: string
+                        example: "Invalid request payload|Data not found"
+        '401':
+          description: Unauthorized
+      parameters:
+        - name: Timestamp
+          in: header
+          description: The timestamp of the request
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          description: Signature based on timestamp, access, and secret keys
+          required: true
+          schema:
+            type: string
+components:
+  schemas:
+    SamplePostRequest:
+      type: object
+      required:
+        - filed_name
+      properties:
+        filed_name:
+          type: string
+          format: uuid
+        timestamp_from_field:
+          type: integer
+          example: 1714461801
+          default: 7 days in the past (current timestamp minus 7 days)
+          description: "timestamp_from_field can not be more than 90 days in the past, if it is then 400 error will be returned.
+          timestamp_from_field cannot be more than timestamp_to.
+          timestamp_from_field cannot be from the future.
+          timestamp_from_field value is in seconds.
+          "
+        timestamp_to_field:
+          type: integer
+          example: 1714461817
+          description: "timestamp_to_field can not be in the future, if it is then 400 error will be returned.
+          timestamp_to_field value is in seconds"
+          default: current timestamp
+        array_field:
+          type: array
+          items:
+            type: string
+            format: uuid
+        per_page:
+          type: integer
+          maximum: 100
+          minimum: 1
+          example: 30
+          default: 30
+        page:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          example: 1
+          default: 1
+
+    SampleResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/SampleEntity'
+        metadata:
+          type: object
+          properties:
+            total:
+              type: integer
+              example: 5
+            per_page:
+              type: integer
+              example: 30
+            current_page:
+              type: integer
+              example: 1
+            total_pages:
+              type: integer
+              example: 1
+
+    SampleEntity:
+      type: object
+      properties:
+        type:
+          type: string
+          example: lock
+        action:
+          type: string
+          example: master_validated
+        timestamp:
+          type: integer
+          example: 1712910974
+        organization_uuid:
+          type: string
+          format: uuid
+        user:
+          type: object
+          properties:
+            uuid:
+              type: string
+              format: uuid
+            email:
+              type: string
+              format: email
+          nullable: true
+        metadata:
+          type: object
